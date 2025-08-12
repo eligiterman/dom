@@ -1,0 +1,73 @@
+require 'sinatra/activerecord/rake'
+require 'dotenv/load'
+
+namespace :db do
+  desc "Create the database"
+  task :create do
+    ActiveRecord::Base.establish_connection(ENV['RACK_ENV'] || 'development')
+    ActiveRecord::Base.connection.create_database('listing_aggregator_development')
+    puts "Database created!"
+  end
+
+  desc "Drop the database"
+  task :drop do
+    ActiveRecord::Base.establish_connection(ENV['RACK_ENV'] || 'development')
+    ActiveRecord::Base.connection.drop_database('listing_aggregator_development')
+    puts "Database dropped!"
+  end
+
+  desc "Seed the database with sample data"
+  task :seed => :environment do
+    require_relative 'db/seeds/sample_data'
+    SampleDataSeeder.seed_listings
+  end
+
+  desc "Clear sample data from database"
+  task :clear_sample => :environment do
+    require_relative 'db/seeds/sample_data'
+    SampleDataSeeder.clear_sample_data
+  end
+
+  desc "Reset sample data (clear and reseed)"
+  task :reset_sample => :environment do
+    require_relative 'db/seeds/sample_data'
+    SampleDataSeeder.reset_sample_data
+  end
+
+  desc "Test API connections"
+  task :test_apis => :environment do
+    require_relative 'services/real_data_service'
+    real_data_service = RealDataService.new
+    real_data_service.test_api_connections
+  end
+
+  desc "Fetch real data from APIs"
+  task :fetch_real_data => :environment do
+    require_relative 'services/real_data_service'
+    real_data_service = RealDataService.new
+    listings = real_data_service.fetch_all_real_data
+    puts "Fetched #{listings.length} real listings"
+  end
+
+  desc "Save real data to database"
+  task :save_real_data => :environment do
+    require_relative 'services/real_data_service'
+    real_data_service = RealDataService.new
+    listings = real_data_service.fetch_all_real_data
+    real_data_service.save_real_data_to_database(listings)
+  end
+
+  desc "Clear real data from database"
+  task :clear_real_data => :environment do
+    require_relative 'services/real_data_service'
+    real_data_service = RealDataService.new
+    real_data_service.clear_real_data
+  end
+
+  desc "Show database statistics"
+  task :stats => :environment do
+    require_relative 'services/real_data_service'
+    real_data_service = RealDataService.new
+    real_data_service.database_stats
+  end
+end 

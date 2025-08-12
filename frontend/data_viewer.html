@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate Data Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px 20px;
+            margin: 0 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .data-container {
+            padding: 20px;
+        }
+
+        .api-section {
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .api-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .api-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .listing-card {
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .listing-header {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .listing-address {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .listing-price {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .listing-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .all-params {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .all-params h4 {
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .params-list {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Real Estate Data Viewer</h1>
+            <p>View real data from your RapidAPI subscriptions</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="fetchAllData()">
+                <span id="fetch-btn-text">📊 Fetch All Data</span>
+            </button>
+            <button class="btn" onclick="clearData()">🗑️ Clear Data</button>
+            <button class="btn" onclick="exportData()">📥 Export JSON</button>
+        </div>
+
+        <div id="status" style="display: none;" class="status"></div>
+
+        <div class="data-container" id="data-container">
+            <div class="no-data">
+                <h3>No data loaded yet</h3>
+                <p>Click "Fetch All Data" to load real estate listings from your APIs</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = {};
+
+        async function fetchAllData() {
+            const fetchBtn = document.querySelector('.btn');
+            const fetchBtnText = document.getElementById('fetch-btn-text');
+            const status = document.getElementById('status');
+
+            // Update UI
+            fetchBtn.disabled = true;
+            fetchBtnText.innerHTML = '<span class="loading-spinner"></span>Fetching...';
+            status.style.display = 'block';
+            status.className = 'status loading';
+            status.textContent = '🔄 Fetching data from all APIs...';
+
+            try {
+                // Use the deployed API URL or fallback to localhost
+                const apiUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:4000/api/fetch-real-data'
+                    : '/api/fetch-real-data';
+                const response = await fetch(apiUrl);
+                const result = await response.json();
+
+                if (result.success) {
+                    allData = result.data;
+                    displayData(allData);
+                    status.className = 'status success';
+                    status.textContent = `✅ Successfully fetched data from ${Object.keys(allData).length} APIs`;
+                } else {
+                    throw new Error(result.error || 'Failed to fetch data');
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                console.error('Error fetching data:', error);
+            } finally {
+                fetchBtn.disabled = false;
+                fetchBtnText.textContent = '📊 Fetch All Data';
+            }
+        }
+
+        function displayData(data) {
+            const container = document.getElementById('data-container');
+            container.innerHTML = '';
+
+            Object.entries(data).forEach(([apiName, listings]) => {
+                if (!listings || listings.length === 0) return;
+
+                const section = document.createElement('div');
+                section.className = 'api-section';
+
+                const header = document.createElement('div');
+                header.className = 'api-header';
+                header.innerHTML = `
+                    <div class="api-name">${formatApiName(apiName)}</div>
+                    <div class="api-count">${listings.length} listings</div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = 'listings-grid';
+
+                listings.forEach(listing => {
+                    const card = createListingCard(listing, apiName);
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(header);
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <h3>No data available</h3>
+                        <p>No listings were found from any of the APIs</p>
+                    </div>
+                `;
+            }
+        }
+
+        function createListingCard(listing, apiName) {
+            const card = document.createElement('div');
+            card.className = 'listing-card';
+
+            // Extract common fields
+            const address = listing.address || listing.formattedAddress || listing.streetAddress || 'Address not available';
+            const price = listing.price || listing.listPrice || listing.estimatedPrice || 'Price not available';
+            const bedrooms = listing.bedrooms || listing.beds || 'N/A';
+            const bathrooms = listing.bathrooms || listing.baths || 'N/A';
+            const squareFeet = listing.squareFeet || listing.livingArea || listing.area || 'N/A';
+            const propertyType = listing.propertyType || listing.homeType || listing.type || 'N/A';
+
+            card.innerHTML = `
+                <div class="listing-header">
+                    <div class="listing-address">${address}</div>
+                    <div class="listing-price">$${formatPrice(price)}</div>
+                </div>
+                
+                <div class="listing-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Bedrooms:</span>
+                        <span class="detail-value">${bedrooms}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Bathrooms:</span>
+                        <span class="detail-value">${bathrooms}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Square Feet:</span>
+                        <span class="detail-value">${formatSquareFeet(squareFeet)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">${propertyType}</span>
+                    </div>
+                </div>
+
+                <div class="all-params">
+                    <h4>All Available Parameters</h4>
+                    <div class="params-list">${JSON.stringify(listing, null, 2)}</div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function formatApiName(name) {
+            return name.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        function formatPrice(price) {
+            if (typeof price === 'number') {
+                return price.toLocaleString();
+            }
+            return price;
+        }
+
+        function formatSquareFeet(sqft) {
+            if (typeof sqft === 'number') {
+                return sqft.toLocaleString();
+            }
+            return sqft;
+        }
+
+        function clearData() {
+            allData = {};
+            document.getElementById('data-container').innerHTML = `
+                <div class="no-data">
+                    <h3>No data loaded yet</h3>
+                    <p>Click "Fetch All Data" to load real estate listings from your APIs</p>
+                </div>
+            `;
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function exportData() {
+            if (Object.keys(allData).length === 0) {
+                alert('No data to export. Please fetch data first.');
+                return;
+            }
+
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `real-estate-data-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: real-estate-api
+    env: ruby
+    buildCommand: bundle install
+    startCommand: bundle exec ruby app.rb
+    envVars:
+      - key: RAPIDAPI_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ENVIRONMENT
+        value: production 

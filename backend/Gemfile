@@ -1,0 +1,17 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sinatra-contrib'
+gem 'dotenv'
+gem 'puma'
+gem 'rackup'
+gem 'httparty'
+
+# Database gems
+gem 'activerecord'
+gem 'pg'
+gem 'sinatra-activerecord'
+
+# Development gems
+gem 'rake'
+gem 'sqlite3', group: :development
