@@ -2,6 +2,7 @@ services:
   - type: web
     name: real-estate-api
     env: ruby
+    rootDir: backend
     buildCommand: bundle install
     startCommand: bundle exec ruby app.rb
     envVars:
