@@ -22,7 +22,7 @@ class Listing < ActiveRecord::Base
   scope :active, -> { where(active: true) }
 
   # Serialize images array
-  serialize :images, Array
+  serialize :images, coder: Array
 
   def price_per_sqft
     return nil unless price && square_feet && square_feet > 0
