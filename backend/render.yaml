@@ -8,7 +8,5 @@ services:
     envVars:
       - key: RAPIDAPI_KEY
         sync: false
-      - key: DATABASE_URL
-        sync: false
       - key: ENVIRONMENT
         value: production 

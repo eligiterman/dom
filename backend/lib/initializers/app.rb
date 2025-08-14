@@ -4,13 +4,23 @@
 require 'dotenv/load'
 require 'sinatra'
 require 'sinatra/json'
-require 'sinatra/activerecord'
+
+# Only load ActiveRecord if DATABASE_URL is set
+if ENV['DATABASE_URL']
+  require 'sinatra/activerecord'
+  # Configure database
+  set :database_file, 'config/database.yml'
+end
 
 # Load all application files
-Dir[File.join(__dir__, '..', 'models', '*.rb')].each { |file| require file }
 Dir[File.join(__dir__, '..', 'services', '*.rb')].each { |file| require file }
 Dir[File.join(__dir__, '..', 'controllers', '*.rb')].each { |file| require file }
 Dir[File.join(__dir__, '..', 'config', '*.rb')].each { |file| require file }
+
+# Only load models if using database
+if ENV['DATABASE_URL']
+  Dir[File.join(__dir__, '..', 'models', '*.rb')].each { |file| require file }
+end
 
 # Configure Sinatra
 configure do
@@ -28,9 +38,6 @@ configure do
     content_type 'application/json'
   end
 end
-
-# Configure database
-set :database_file, 'config/database.yml'
 
 # Error handling
 error 404 do
