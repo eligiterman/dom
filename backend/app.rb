@@ -2,18 +2,18 @@ require 'sinatra'
 require 'sinatra/json'
 require 'dotenv/load'
 
-# Load all our modules
+# Main Sinatra application
+# This file only contains routes - all configuration is in lib/initializers/
+
+# Load the application initializer FIRST (this sets up ActiveRecord)
+require_relative 'lib/initializers/app'
+
+# Now load all our modules (after ActiveRecord is initialized)
 require_relative 'config/api_config'
 require_relative 'models/listing'
 require_relative 'services/api_client'
 require_relative 'services/listing_service'
 require_relative 'controllers/listings_controller'
-
-# Main Sinatra application
-# This file only contains routes - all configuration is in lib/initializers/
-
-# Load the application initializer
-require_relative 'lib/initializers/app'
 
 # Include helpers
 helpers ApiHelper
