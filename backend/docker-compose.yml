@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: real-estate-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-listing_aggregator_development}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - real-estate-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching (optional, for future use)
+  redis:
+    image: redis:7-alpine
+    container_name: real-estate-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - real-estate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Ruby Application
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-development}
+    container_name: real-estate-api
+    ports:
+      - "${PORT:-4000}:4000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-listing_aggregator_development}
+      REDIS_URL: redis://redis:6379
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      PORT: ${PORT:-4000}
+      RAILS_ENV: ${RAILS_ENV:-development}
+      RACK_ENV: ${RACK_ENV:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/tmp
+      - /app/log
+    networks:
+      - real-estate-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        until pg_isready -h postgres -p 5432 -U ${POSTGRES_USER:-postgres}; do
+          sleep 2
+        done &&
+        echo 'Database is ready!' &&
+        bundle exec rake db:create db:migrate db:seed &&
+        bundle exec ruby app.rb
+      "
+
+volumes:
+  postgres_data:
+
+networks:
+  real-estate-network:
+    driver: bridge
+

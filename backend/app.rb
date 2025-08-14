@@ -1,9 +1,13 @@
 require 'sinatra'
 require 'sinatra/json'
 require 'dotenv/load'
+require 'sinatra/activerecord'
 
 # Load configuration first
 require_relative 'config/api_config'
+
+# Configure database
+set :database_file, 'config/database.yml'
 
 # Load all our modules
 require_relative 'models/listing'
