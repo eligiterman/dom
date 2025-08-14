@@ -10,14 +10,10 @@ require_relative 'lib/initializers/app'
 
 # Now load all our modules (after ActiveRecord is initialized)
 require_relative 'config/api_config'
+require_relative 'models/listing'
 require_relative 'services/api_client'
 require_relative 'services/listing_service'
 require_relative 'controllers/listings_controller'
-
-# Only load models if using database
-if ENV['DATABASE_URL']
-  require_relative 'models/listing'
-end
 
 # Include helpers
 helpers ApiHelper
