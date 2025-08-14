@@ -2,21 +2,36 @@ require 'sinatra'
 require 'sinatra/json'
 require 'dotenv/load'
 
-# Main Sinatra application
-# This file only contains routes - all configuration is in lib/initializers/
-
-# Load the application initializer FIRST (this sets up ActiveRecord)
-require_relative 'lib/initializers/app'
-
-# Now load all our modules (after ActiveRecord is initialized)
+# Load configuration first
 require_relative 'config/api_config'
+
+# Load all our modules
 require_relative 'models/listing'
 require_relative 'services/api_client'
 require_relative 'services/listing_service'
 require_relative 'controllers/listings_controller'
+require_relative 'lib/helpers/api_helper'
+require_relative 'lib/validators/listing_validator'
 
 # Include helpers
 helpers ApiHelper
+
+# Configure Sinatra
+configure do
+  config = ApiConfig.server_config
+  set :port, config[:port]
+  set :bind, config[:bind]
+  set :environment, config[:environment]
+  
+  # Enable logging
+  enable :logging
+  enable :dump_errors
+  
+  # Set JSON content type
+  before do
+    content_type 'application/json'
+  end
+end
 
 # Initialize controller
 listings_controller = ListingsController.new
@@ -100,4 +115,13 @@ get '/api/fetch-real-data' do
       data: {}
     }
   end
+end
+
+# Error handling
+error 404 do
+  json error: 'Not Found', status: 404
+end
+
+error 500 do
+  json error: 'Internal Server Error', status: 500
 end
