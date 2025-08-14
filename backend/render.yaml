@@ -17,6 +17,8 @@ services:
         value: production
       - key: PORT
         value: 4000
+      - key: RAILS_MAX_THREADS
+        value: 5
     envVarGroups:
       - name: database
         envVars:

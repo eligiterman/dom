@@ -7,7 +7,15 @@ require 'sinatra/activerecord'
 require_relative 'config/api_config'
 
 # Configure database
-set :database_file, 'config/database.yml'
+configure do
+  if ENV['DATABASE_URL']
+    # Production environment - use DATABASE_URL
+    set :database, ENV['DATABASE_URL']
+  else
+    # Development/Test environment - use database.yml
+    set :database_file, 'config/database.yml'
+  end
+end
 
 # Load all our modules
 require_relative 'models/listing'

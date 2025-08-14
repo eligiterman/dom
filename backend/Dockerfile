@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for development and production
 
 # Base stage with common dependencies
-FROM ruby:3.2-alpine AS base
+FROM ruby:3.4-alpine AS base
 
 # Install system dependencies
 RUN apk add --no-cache \

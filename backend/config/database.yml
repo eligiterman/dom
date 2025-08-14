@@ -21,4 +21,6 @@ test:
 
 production:
   <<: *default
+  adapter: postgresql
   url: <%= ENV['DATABASE_URL'] %>
+  database: <%= ENV['DATABASE_URL'] ? ENV['DATABASE_URL'].split('/').last : 'realestate' %>
